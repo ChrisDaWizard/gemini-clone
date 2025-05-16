@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import "./Main.css";
 import { assets } from '../../assets/assets';
+import { loadfromLocalStorage, saveToLocalStorage } from '../../utils/LocalStorage';
 
 const Main = () => {
   const [prompt, setPrompt] = useState(''); //almacenamiento del texto del usuario
   const [messages, setMessages] = useState([]); //almacenamiento de los mensajes del bot y usuario
   const [loading, setLoading] = useState(false); //se indica si se espera o no una respuesta del servidor
   const [extended, setExtended] = useState(false); //se indica si solo mostrar el chat o las sugerencia de inicio nuevo
+
+  useEffect(() => { //se ejecuta automaticamente, si detecta que el mensaje es mayor a 0 m guarda en localstorage
+    if (messages.length > 0) {
+    }
+  }, [messages]);
 
   const handleSend = async () => {  //funcion que se ejecuta cuando el usuario manda el mensaje
     if (!prompt.trim()) return; //evita que se envien mensajes vacios
@@ -27,7 +33,17 @@ const Main = () => {
 
       const data = await res.json(); // se covierte la respuesta a JSON
       const botMessage = { type: 'bot', text: data.response }; //se crea objecto con la respuesta del bot (data.response)
-      setMessages(prev => [...prev, botMessage]); //se agrega al historial
+      const updatedMessages = [...messages, { type: 'user', text: prompt }, botMessage];
+      setMessages(updatedMessages);//se agregan al historial
+
+      const chatHistory = loadfromLocalStorage("chatHistory") || [];
+      chatHistory.push({
+        title: prompt.slice (0, 25),
+        prompt: prompt,
+        response: data.response,
+        timestamp: Date.now()
+      });
+      saveToLocalStorage("chatHistory", chatHistory);
     } catch (err) {
       const errorMsg = { type: 'bot', text: 'Error al conectarse con el servidor.' };
       setMessages(prev => [...prev, errorMsg]);
@@ -65,7 +81,7 @@ const Main = () => {
 
         <div className="chat-box">
           {messages.map((msg, index) => ( //se recorre cada mensaje y se genera un div, React necesita una clave única para cada elemento en una lista. En este caso, se usa el índice del array como clave
-            <div key={index} className={`chat-bubble ${msg.type}`}> 
+            <div key={index} className={`chat-bubble ${msg.type}`}>
               {msg.text}
             </div> //${msg.type} agrega una clase dinámica (user o bot), que cambia el estilo del mensaje y {msg.text} ,muestra el mensaje
           ))}
