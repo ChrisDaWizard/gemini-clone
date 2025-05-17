@@ -1,12 +1,18 @@
-import React from 'react'
+import React, { useState } from 'react'
 import SideBar from './components/SideBar/SideBar'
 import Main from './components/Main/Main'
 
+
 const App = () => {
+  const [selectedChat, setSelectedChat] = useState(null);
+
   return (
     <>
-        <SideBar />
-        <Main />
+      <SideBar setSelectedChat={setSelectedChat} />
+      <Main
+        selectedChat={selectedChat}
+        setSelectedChat={setSelectedChat}
+      />
     </>
   )
 }

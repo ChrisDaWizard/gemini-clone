@@ -3,7 +3,7 @@ import "./SideBar.css"
 import { assets } from "../../assets/assets"
 import { loadfromLocalStorage } from '../../utils/LocalStorage'
 
-const SideBar = () => {
+const SideBar = ({setSelectedChat}) => {
 
     const [extended, setExtended] = useState(false);
     const [chatHistory, setChatHistory] = useState([]);
@@ -25,7 +25,12 @@ const SideBar = () => {
                     <div className="recent">
                         <p className="recent-title">Recent</p>
                         {chatHistory.map((chat, index) => (
-                            <div key={index} className="recent-entry">
+                            <div key={index} className="recent-entry" onClick={() => setSelectedChat({
+                                ...chat,
+                                messages: chat.messages || [
+                                    {type: "bot", text: "Ops! no hay nada"}
+                                ]
+                            })}>
                                 <img src={assets.message_icon} alt="" />
                                 <p>{chat.title || chat.prompt?.slice(0, 20) + "..."}</p>
                             </div>

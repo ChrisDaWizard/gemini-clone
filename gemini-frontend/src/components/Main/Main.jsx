@@ -2,17 +2,20 @@ import React, { useEffect, useState } from 'react';
 import "./Main.css";
 import { assets } from '../../assets/assets';
 import { loadfromLocalStorage, saveToLocalStorage } from '../../utils/LocalStorage';
+import { v4 as uuidv4 } from "uuid";
 
-const Main = () => {
+const Main = ({ selectedChat, setSelectedChat }) => {
   const [prompt, setPrompt] = useState(''); //almacenamiento del texto del usuario
   const [messages, setMessages] = useState([]); //almacenamiento de los mensajes del bot y usuario
   const [loading, setLoading] = useState(false); //se indica si se espera o no una respuesta del servidor
   const [extended, setExtended] = useState(false); //se indica si solo mostrar el chat o las sugerencia de inicio nuevo
 
-  useEffect(() => { //se ejecuta automaticamente, si detecta que el mensaje es mayor a 0 m guarda en localstorage
-    if (messages.length > 0) {
+  useEffect(()=> {
+    if (selectedChat?.messages) {
+      setMessages(selectedChat.messages);
+      setExtended(true);
     }
-  }, [messages]);
+  }, [selectedChat]);
 
   const handleSend = async () => {  //funcion que se ejecuta cuando el usuario manda el mensaje
     if (!prompt.trim()) return; //evita que se envien mensajes vacios
@@ -20,7 +23,8 @@ const Main = () => {
     setExtended(true); // chat extendido
 
     const userMessage = { type: 'user', text: prompt }; //se crea objecto para el mensaje del usuario
-    setMessages(prev => [...prev, userMessage]); //agrega el mensaje al historial de mensajes anteriores prev
+    const updatedMessages = [...messages, userMessage]
+    setMessages(updatedMessages); //agrega el mensaje al historial de mensajes anteriores prev
     setLoading(true); //se activa el estado de carga
     setPrompt(""); //se limpia el input
 
@@ -31,19 +35,38 @@ const Main = () => {
         body: JSON.stringify({ prompt }),
       });
 
+      if(!res.ok) throw new Error("respuesta no valida")
+
       const data = await res.json(); // se covierte la respuesta a JSON
+
+      if(!data.response) throw new Error("La respuesta del bot esta vacía")
+
       const botMessage = { type: 'bot', text: data.response }; //se crea objecto con la respuesta del bot (data.response)
-      const updatedMessages = [...messages, { type: 'user', text: prompt }, botMessage];
-      setMessages(updatedMessages);//se agregan al historial
+      const finalMessages = [...messages, userMessage, botMessage];
+      setMessages(finalMessages);//se agregan al historial
 
       const chatHistory = loadfromLocalStorage("chatHistory") || [];
-      chatHistory.push({
-        title: prompt.slice (0, 25),
-        prompt: prompt,
-        response: data.response,
-        timestamp: Date.now()
-      });
-      saveToLocalStorage("chatHistory", chatHistory);
+      let updatedChatHistory;
+      if (!selectedChat) {
+        const newChat = {
+          id: uuidv4(),
+          title: prompt.slice(0, 25),
+          messages: finalMessages,
+          timestamp: Date.now()
+        };
+        updatedChatHistory = [newChat, ...chatHistory];
+        saveToLocalStorage("chatHistory", updatedChatHistory);
+        setSelectedChat(newChat); // ✅ Actualiza el estado del chat seleccionado
+      } else {
+        updatedChatHistory = chatHistory.map(chat =>
+          chat.id === selectedChat.id
+            ? { ...chat, messages: finalMessages }
+            : chat
+        );
+        saveToLocalStorage("chatHistory", updatedChatHistory)
+        setSelectedChat(prev => ({ ...prev, messages: finalMessages }));
+      }
+      saveToLocalStorage("chatHistory", updatedChatHistory);
     } catch (err) {
       const errorMsg = { type: 'bot', text: 'Error al conectarse con el servidor.' };
       setMessages(prev => [...prev, errorMsg]);
@@ -80,7 +103,7 @@ const Main = () => {
         )}
 
         <div className="chat-box">
-          {messages.map((msg, index) => ( //se recorre cada mensaje y se genera un div, React necesita una clave única para cada elemento en una lista. En este caso, se usa el índice del array como clave
+          {(selectedChat?.messages || messages).map((msg, index) => ( //se recorre cada mensaje y se genera un div, React necesita una clave única para cada elemento en una lista. En este caso, se usa el índice del array como clave
             <div key={index} className={`chat-bubble ${msg.type}`}>
               {msg.text}
             </div> //${msg.type} agrega una clase dinámica (user o bot), que cambia el estilo del mensaje y {msg.text} ,muestra el mensaje
