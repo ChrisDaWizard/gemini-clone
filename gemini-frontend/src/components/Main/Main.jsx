@@ -3,6 +3,7 @@ import "./Main.css";
 import { assets } from '../../assets/assets';
 import { loadfromLocalStorage, saveToLocalStorage } from '../../utils/LocalStorage';
 import { v4 as uuidv4 } from "uuid";
+import GreetAndCard from '../GreetAndCard/GreetAndCard';
 
 const Main = ({ selectedChat, setSelectedChat }) => {
   const [prompt, setPrompt] = useState(''); //almacenamiento del texto del usuario
@@ -11,9 +12,9 @@ const Main = ({ selectedChat, setSelectedChat }) => {
   const [extended, setExtended] = useState(false); //se indica si solo mostrar el chat o las sugerencia de inicio nuevo
 
   useEffect(()=> {
-    if (selectedChat?.messages) {
+    if (selectedChat?.messages) { //si selectedChat tiene mensajes, setea el chat seleccionado con sus mensajes
       setMessages(selectedChat.messages);
-      setExtended(true);
+      setExtended(true); //se extiende el chat
     }
   }, [selectedChat]);
 
@@ -35,35 +36,35 @@ const Main = ({ selectedChat, setSelectedChat }) => {
         body: JSON.stringify({ prompt }),
       });
 
-      if(!res.ok) throw new Error("respuesta no valida")
+      if(!res.ok) throw new Error("respuesta no valida") //si la respuesta no es valida, tira error
 
       const data = await res.json(); // se covierte la respuesta a JSON
 
-      if(!data.response) throw new Error("La respuesta del bot esta vacía")
+      if(!data.response) throw new Error("La respuesta del bot esta vacía")//si data no es valido, tira error
 
       const botMessage = { type: 'bot', text: data.response }; //se crea objecto con la respuesta del bot (data.response)
-      const finalMessages = [...messages, userMessage, botMessage];
-      setMessages(finalMessages);//se agregan al historial
+      const finalMessages = [...messages, userMessage, botMessage];//mensajes finales toma todos los mensajes, de usuario y del bot
+      setMessages(finalMessages);//se agregan al "display" de mensajes
 
       const chatHistory = loadfromLocalStorage("chatHistory") || [];
       let updatedChatHistory;
-      if (!selectedChat) {
+      if (!selectedChat) { //si no hay un chat preseleccionado, crea nuevo chat como objeto
         const newChat = {
           id: uuidv4(),
           title: prompt.slice(0, 25),
           messages: finalMessages,
           timestamp: Date.now()
         };
-        updatedChatHistory = [newChat, ...chatHistory];
-        saveToLocalStorage("chatHistory", updatedChatHistory);
+        updatedChatHistory = [newChat, ...chatHistory]; //updates agarra el nuevo chat y carga el historial de chatHistory
+        saveToLocalStorage("chatHistory", updatedChatHistory); //guarda el historial, usando chat como key y updated como value
         setSelectedChat(newChat); // ✅ Actualiza el estado del chat seleccionado
       } else {
-        updatedChatHistory = chatHistory.map(chat =>
-          chat.id === selectedChat.id
+        updatedChatHistory = chatHistory.map(chat =>//mapea chatHistory en su lugar
+          chat.id === selectedChat.id //busca el id 
             ? { ...chat, messages: finalMessages }
             : chat
         );
-        saveToLocalStorage("chatHistory", updatedChatHistory)
+        saveToLocalStorage("chatHistory", updatedChatHistory) //se guarda usando chat como key y updated como value
         setSelectedChat(prev => ({ ...prev, messages: finalMessages }));
       }
       saveToLocalStorage("chatHistory", updatedChatHistory);
@@ -86,21 +87,7 @@ const Main = ({ selectedChat, setSelectedChat }) => {
       <div className="main-container">
 
         {/* Solo se muestran si no se ha extendido el chat */}
-        {!extended && (
-          <>
-            <div className="greet">
-              <p><span>Hello!, Dev.</span></p>
-              <p>How can I help you?</p>
-            </div>
-
-            <div className="cards">
-              <div className="card"><p>Suggestion1</p><img src={assets.compass_icon} alt="" /></div>
-              <div className="card"><p>Suggestion2</p><img src={assets.bulb_icon} alt="" /></div>
-              <div className="card"><p>Suggestion3</p><img src={assets.message_icon} alt="" /></div>
-              <div className="card"><p>Suggestion4</p><img src={assets.code_icon} alt="" /></div>
-            </div>
-          </>
-        )}
+       <GreetAndCard extended={extended} />
 
         <div className="chat-box">
           {(selectedChat?.messages || messages).map((msg, index) => ( //se recorre cada mensaje y se genera un div, React necesita una clave única para cada elemento en una lista. En este caso, se usa el índice del array como clave

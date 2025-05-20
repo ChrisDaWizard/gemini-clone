@@ -3,13 +3,13 @@ import "./SideBar.css"
 import { assets } from "../../assets/assets"
 import { loadfromLocalStorage } from '../../utils/LocalStorage'
 
-const SideBar = ({setSelectedChat}) => {
+const SideBar = ({setSelectedChat}) => { //setSelectedChat se ancla desde el app.jsx
 
     const [extended, setExtended] = useState(false);
     const [chatHistory, setChatHistory] = useState([]);
 
     useEffect(() => {
-        const storedHistory = loadfromLocalStorage("chatHistory") || [];
+        const storedHistory = loadfromLocalStorage("chatHistory") || []; //storedHistory se carga desde localstorage creado en utils
         setChatHistory([...storedHistory].reverse());
     }, []);
 
@@ -24,7 +24,7 @@ const SideBar = ({setSelectedChat}) => {
                 {extended && (
                     <div className="recent">
                         <p className="recent-title">Recent</p>
-                        {chatHistory.map((chat, index) => (
+                        {chatHistory.map((chat, index) => ( //mapea el objecto chatHistory
                             <div key={index} className="recent-entry" onClick={() => setSelectedChat({
                                 ...chat,
                                 messages: chat.messages || [
