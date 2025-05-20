@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import "./SideBar.css"
 import { assets } from "../../assets/assets"
 import { loadfromLocalStorage } from '../../utils/LocalStorage'
+import Bottom from './Bottom/Bottom'
+import Top from './Top/Top'
 
 const SideBar = ({setSelectedChat}) => { //setSelectedChat se ancla desde el app.jsx
 
@@ -15,42 +17,8 @@ const SideBar = ({setSelectedChat}) => { //setSelectedChat se ancla desde el app
 
     return (
         <div className='sidebar'>
-            <div className="top">
-                <img onClick={() => setExtended(prev => !prev)} className='menu' src={assets.menu_icon} alt="" />
-                <div className="new-chat">
-                    <img src={assets.plus_icon} alt="" />
-                    {extended ? <p>New Chat</p> : null}
-                </div>
-                {extended && (
-                    <div className="recent">
-                        <p className="recent-title">Recent</p>
-                        {chatHistory.map((chat, index) => ( //mapea el objecto chatHistory
-                            <div key={index} className="recent-entry" onClick={() => setSelectedChat({
-                                ...chat,
-                                messages: chat.messages || [
-                                    {type: "bot", text: "Ops! no hay nada"}
-                                ]
-                            })}>
-                                <img src={assets.message_icon} alt="" />
-                                <p>{chat.title || chat.prompt?.slice(0, 20) + "..."}</p>
-                            </div>
-                        ))}
-                    </div>
-                )}</div>
-            <div className="bottom">
-                <div className="bottom-item recent-entry">
-                    <img src={assets.question_icon} alt="" />
-                    {extended ? <p>Help</p> : null}
-                </div>
-                <div className="bottom-item recent-entry">
-                    <img src={assets.history_icon} alt="" />
-                    {extended ? <p>Activity</p> : null}
-                </div>
-                <div className="bottom-item recent-entry">
-                    <img src={assets.setting_icon} alt="" />
-                    {extended ? <p>Settings</p> : null}
-                </div>
-            </div>
+            <Top extended={extended} setExtended={setExtended} chatHistory={chatHistory} setSelectedChat={setSelectedChat} />
+            <Bottom extended={extended} />
         </div>
     )
 }

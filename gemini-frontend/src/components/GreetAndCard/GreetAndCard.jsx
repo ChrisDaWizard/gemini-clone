@@ -3,7 +3,7 @@ import { assets } from '../../assets/assets'
 
 const GreetAndCard = ({ extended }) => {
 
-    if (extended) return all
+    if (extended) return null
 
     return (
         <>
