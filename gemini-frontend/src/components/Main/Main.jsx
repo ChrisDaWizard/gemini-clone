@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import GreetAndCard from '../GreetAndCard/GreetAndCard';
 import { MainBottom } from '../MainBottom/MainBottom';
 import ChatBox from '../ChatBox/ChatBox';
+import { fetchGeminiResponse} from '../../utils/ApiFetch';
 
 const Main = ({ selectedChat, setSelectedChat }) => {
   const [prompt, setPrompt] = useState(''); //almacenamiento del texto del usuario
@@ -32,19 +33,8 @@ const Main = ({ selectedChat, setSelectedChat }) => {
     setPrompt(""); //se limpia el input
 
     try { //peticion al backend para la respuesta del bot
-      const res = await fetch('http://localhost:3001/api/gemini', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
-      });
-
-      if(!res.ok) throw new Error("respuesta no valida") //si la respuesta no es valida, tira error
-
-      const data = await res.json(); // se covierte la respuesta a JSON
-
-      if(!data.response) throw new Error("La respuesta del bot esta vacía")//si data no es valido, tira error
-
-      const botMessage = { type: 'bot', text: data.response }; //se crea objecto con la respuesta del bot (data.response)
+      const botResponse = await fetchGeminiResponse(prompt);
+      const botMessage = { type: 'bot', text: botResponse }; //se crea objecto con la respuesta del bot (data.response)
       const finalMessages = [...messages, userMessage, botMessage];//mensajes finales toma todos los mensajes, de usuario y del bot
       setMessages(finalMessages);//se agregan al "display" de mensajes
 

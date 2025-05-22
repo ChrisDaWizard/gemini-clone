@@ -12,7 +12,7 @@ const Top = ({setExtended, extended, chatHistory, setSelectedChat}) => {
             {extended && (
                 <div className="recent">
                     <p className="recent-title">Recent</p>
-                    {chatHistory.map((chat, index) => ( //mapea el objecto chatHistory
+                    {[...chatHistory].reverse().map((chat, index) => ( //mapea el objecto chatHistory
                         <div key={index} className="recent-entry" onClick={() => setSelectedChat({
                             ...chat,
                             messages: chat.messages || [
